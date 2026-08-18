@@ -134,7 +134,7 @@ impl AimEvaluator {
     const WIGGLE_MULTIPLIER: f64 = 0.81; // Wiggly patterns are generally less difficult in a cheat environment than straight aim patterns, so I reduced the multiplier to reflect that. This is a subjective adjustment based on my experience and understanding of aim difficulty.
 
     // VN aim evaluation still uses the legacy ccv3 evaluation structure,
-    // wheras aim_rx uses a more modernized structure.
+    // whereas aim_rx uses a more modernized structure.
     // This is likely what leads to the discrepancy in aim pp between vanilla and relax, 
     // so just adjusting base aim strain and bonus multipliers won't work bc of the less advanced evaluation structure.
     // Akat calibration is being used to bring vanilla aim pp closer to what it should be worth with aim assist. 
