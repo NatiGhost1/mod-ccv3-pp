@@ -1,0 +1,36 @@
+[package]
+name = "ccv3-pp"
+version = "4.0.1"
+edition = "2024"
+authors = ["MaxOhn <ohn.m@hotmail.de>", "NatiGhost1 <josh.miller83@outlook.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/NatiGhost1/ccv3-pp"
+documentation = "https://docs.rs/rosu-pp/"
+description = "PP and star calculation for all osu! gamemodes"
+keywords = ["osu", "pp", "stars", "performance", "difficulty"]
+
+[features]
+default = []
+sync = []
+tracing = ["rosu-map/tracing"]
+
+[dependencies]
+divan = "0.1.21"
+rosu-map = { version = "0.2.1" }
+rosu-mods = { version = "0.4.0" }
+
+[dev-dependencies]
+divan = { version = "0.1.21" }
+proptest = { version = "1.8.0" }
+rosu-mods = { version = "0.4.0", features = ["macros"] }
+
+[profile.test.package.proptest]
+opt-level = 3
+
+[profile.test.package.rand_chacha]
+opt-level = 3
+
+[[bench]]
+name = "hitresult_generators"
+harness = false
