@@ -17,7 +17,7 @@ use crate::{
 };
 
 // * This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
-pub const PERFORMANCE_BASE_MULTIPLIER: f64 = 1.05;
+pub const PERFORMANCE_BASE_MULTIPLIER: f64 = 1.0; // No base multiplier applied in this version; adjust if needed.
 
 pub(super) struct OsuPerformanceCalculator<'mods> {
     attrs: OsuDifficultyAttributes,
@@ -149,7 +149,7 @@ impl OsuPerformanceCalculator<'_> {
         let mut flashlight_value = self.compute_flashlight_value(penalty_miss_count);
 
         let mut pp = (aim_value.powf(1.1)
-            + speed_value.powf(1.1)
+            + speed_value.powf(0.90) // speed is significantly less important than aim in cheat servers
             + acc_value.powf(1.1)
             + flashlight_value.powf(1.1))
         .powf(1.0 / 1.1)
@@ -175,7 +175,7 @@ impl OsuPerformanceCalculator<'_> {
 
         // Recompute pp with the speed rework applied
         pp = (aim_value.powf(1.1)
-            + speed_value.powf(1.1)
+            + speed_value.powf(0.90) // speed is significantly less important than aim in cheat servers
             + acc_value.powf(1.1)
             + flashlight_value.powf(1.1))
         .powf(1.0 / 1.1)
@@ -189,8 +189,8 @@ impl OsuPerformanceCalculator<'_> {
                 &self.attrs.local_bpm_per_minute,
                 params,
             );
-            aim_value *= mult;
-            flashlight_value *= mult;
+            aim_value *= mult.powf(0.92); // Soften the aim nerf a bit so marathon maps don't receive too harsh of a nerf in relax.
+            flashlight_value *= mult; // Nerf remains at full weight for flashlight.
         }
 
         // ── Autopilot marathon decay ────────────────────────────────────
@@ -203,7 +203,7 @@ impl OsuPerformanceCalculator<'_> {
                 params,
             );
             speed_value *= mult;
-            flashlight_value *= mult;
+            flashlight_value *= mult.powf(1.2); // Harshen the nerf on flashlight since flashlight doesn't matter on ap.
         }
 
         // ── Vanilla marathon buff ────────────────────────────────────
@@ -218,8 +218,8 @@ impl OsuPerformanceCalculator<'_> {
                 params,
             );
             if mult > 1.0 {
-                aim_value *= mult;
-                speed_value *= mult;
+                aim_value *= mult.powf(0.88); // aim gets the same reduction as acc
+                speed_value *= mult.powf(0.88); // speed gets the same reduction as acc
                 acc_value *= mult.powf(0.88); // acc gets a bit less of the buff
             }
         }
@@ -320,12 +320,12 @@ impl OsuPerformanceCalculator<'_> {
         }
 
         // Recompute final pp with all nerfs
-        pp = (aim_value.powf(1.1)
-            + speed_value.powf(1.1)
-            + acc_value.powf(1.1)
-            + flashlight_value.powf(1.1))
+        pp = (aim_value.powf(1.05) // aim is slightly less important than accuracy in cheat servers
+            + speed_value.powf(0.90) // speed is significantly less important than aim in cheat servers
+            + acc_value.powf(1.1) // accuracy is slightly more important than aim and speed in cheat servers
+            + flashlight_value.powf(1.1)) // flashlight wont be removed so it stays the same as accuracy in cheat servers
         .powf(1.0 / 1.1)
-            * multiplier;
+            * multiplier; // Changed values to more accurately reflect the importance of each skill in cheat servers
 
         OsuPerformanceAttributes {
             difficulty: self.attrs,
@@ -393,7 +393,7 @@ impl OsuPerformanceCalculator<'_> {
 
         let total_hits = self.total_hits();
 
-        let len_bonus = 0.95
+        let len_bonus = 0.95 
             + 0.4 * (total_hits / 2000.0).min(1.0)
             + f64::from(u8::from(total_hits > 2000.0)) * (total_hits / 2000.0).log10() * 0.5;
 
@@ -554,14 +554,9 @@ impl OsuPerformanceCalculator<'_> {
         if self.mods.bl() {
             acc_value *= 1.14;
         } else if self.mods.hd() || self.mods.tc() {
-            let mut hd_bonus = 1.0 + 0.08 * reverse_lerp(self.attrs.ar, 11.5, 10.0);
+            let mut hd_bonus = 1.0; // HD bonus set to 1.0 (no bonus) because of the exsistance of HD remover.
 
-            // HR nerfs the HD bonus when both are active
-            if self.mods.hr() {
-                hd_bonus = 1.0 + 0.05 * reverse_lerp(self.attrs.ar, 11.5, 10.0); 
-            }
-
-            acc_value *= hd_bonus;
+            acc_value *= hd_bonus; 
         }
 
         if self.mods.fl() {
@@ -569,7 +564,7 @@ impl OsuPerformanceCalculator<'_> {
         }
 
         if self.mods.rx() {
-            let accuracy_multiplier = 0.32 + 0.09 * better_acc_percentage.powf(10.0);
+            let accuracy_multiplier = 0.62 + 0.18 * better_acc_percentage.powf(10.0); // Increased accuracy multiplier for relax so high accuracy scores are rewarded more.
             acc_value *= accuracy_multiplier
         }
 
@@ -1011,8 +1006,8 @@ impl OsuPerformanceCalculator<'_> {
 
         let mut p: f64 = 0.998;
 
-        // Continuous exponent: smooth exponential rise from 1.5 to ~2.4
-        let base_exp = 2.1 + 0.9 * (1.0 - (-misses / 8.0).exp());
+        // Continuous exponent: smooth exponential rise from 1.5 to ~2.4 (not anymore)
+        let base_exp = 2.1 + 0.9 * (1.0 - (-misses / 8.0).exp()); // Strictened the base miss exponent to better emphasize the importance of accuracy in a cheat environment.
 
         // Marathon softening: longer maps get a gentler exponent
         let combo_f = f64::from(map_max_combo);
@@ -1030,8 +1025,8 @@ impl OsuPerformanceCalculator<'_> {
         let acc = self.acc;
         let acc_relief = 0.0
             * ((acc - 0.95) / 0.05).clamp(0.0, 1.0)
-            * (combo_f / 2000.0).clamp(0.0, 1.0);
-
+            * (combo_f / 4000.0).clamp(0.0, 1.0); // Strictened combo factor to (combo_f / 4000.0) because (combo_f / 2000.0) is too lenient in a cheat environment where accuracy is the primary measurement for skill.
+        
         result += acc_relief;
 
         result.min(1.0)

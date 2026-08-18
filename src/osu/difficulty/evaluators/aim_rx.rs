@@ -215,11 +215,11 @@ fn detect_nx_pattern<'a>(
 
 impl AimRxEvaluator {
     // Recalibrated constants to produce akat-equivalent pp output.
-    const WIDE_ANGLE_MULTIPLIER: f64 = 1.15;
-    const ACUTE_ANGLE_MULTIPLIER: f64 = 1.0;
+    const WIDE_ANGLE_MULTIPLIER: f64 = 1.15; // Wide angles in my opinion are more difficult than acute angles with aim assist, so I reduced the multiplier to reflect that. This is a subjective adjustment based on my experience and understanding of aim difficulty.
+    const ACUTE_ANGLE_MULTIPLIER: f64 = 1.0; // Acute angles in my opinion are less difficult than wide angles with aim assist, so I reduced the multiplier to reflect that. This is a subjective adjustment based on my experience and understanding of aim difficulty.
     const SLIDER_MULTIPLIER: f64 = 0.55; // Reduced slider bonus to avoid over-boosting aim pp on maps with many complex fast sliders.
-    const VELOCITY_CHANGE_MULTIPLIER: f64 = 0.75;
-    const WIGGLE_MULTIPLIER: f64 = 0.95;
+    const VELOCITY_CHANGE_MULTIPLIER: f64 = 0.85; // Velocity change bonus is slightly increased to reward technical aim that requires quick adjustments in speed. 
+    const WIGGLE_MULTIPLIER: f64 = 0.81; // Wiggly patterns are generally less difficult in a cheat environment than straight aim patterns, so I reduced the multiplier to reflect that. This is a subjective adjustment based on my experience and understanding of aim difficulty.
 
     const AKAT_CALIBRATION: f64 = 1.0; // No Akat calibration applied in this version; adjust if needed.
 
@@ -766,9 +766,9 @@ impl AimRxEvaluator {
         let recent_farm = Self::recent_farm_streak(osu_curr_obj, diff_objects, 5);
 
         if flow_active {
-            aim_strain *= 0.75 - flow_nerf;
+            aim_strain *= 0.50 - flow_nerf;
         } else {
-            aim_strain *= 1.07 - farm_nerf;
+            aim_strain *= 0.75 - farm_nerf;
 
             // Delayed tech buff after farm + neutral pattern protection + overall cap
             let apply_tech = !(recent_farm >= 3 && farm_nerf > 0.12)
@@ -792,7 +792,7 @@ impl AimRxEvaluator {
                 let dist_weight = 1.0
                     - reverse_lerp(dist, Self::STREAM_DIST_FULL, Self::STREAM_DIST_EXEMPT);
                 let stream_severity = bpm_weight * dist_weight;
-                aim_strain *= 0.81 - Self::STREAM_MAX_NERF * stream_severity;
+                aim_strain *= 0.50 - Self::STREAM_MAX_NERF * stream_severity;
             }
         }
 

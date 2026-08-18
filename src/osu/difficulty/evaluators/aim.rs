@@ -127,20 +127,21 @@ fn windowed_vel_stats<'a>(
 }
 
 impl AimEvaluator {
-    const WIDE_ANGLE_MULTIPLIER: f64 = 1.30;
-    const ACUTE_ANGLE_MULTIPLIER: f64 = 1.15;
+    const WIDE_ANGLE_MULTIPLIER: f64 = 1.0; // Wide angles in my opinion are more difficult than acute angles with aim assist, so I reduced the multiplier to reflect that. This is a subjective adjustment based on my experience and understanding of aim difficulty.
+    const ACUTE_ANGLE_MULTIPLIER: f64 = 0.85; // Acute angles in my opinion are less difficult than wide angles with aim assist, so I reduced the multiplier to reflect that. This is a subjective adjustment based on my experience and understanding of aim difficulty.
     const SLIDER_MULTIPLIER: f64 = 0.70; // Reduced slider bonus to avoid over-boosting aim pp on maps with many complex fast sliders.
-    const VELOCITY_CHANGE_MULTIPLIER: f64 = 0.70;
-    const WIGGLE_MULTIPLIER: f64 = 0.97;
+    const VELOCITY_CHANGE_MULTIPLIER: f64 = 0.80; // Velocity change bonus is slightly increased to reward technical aim that requires quick adjustments in speed.
+    const WIGGLE_MULTIPLIER: f64 = 0.81; // Wiggly patterns are generally less difficult in a cheat environment than straight aim patterns, so I reduced the multiplier to reflect that. This is a subjective adjustment based on my experience and understanding of aim difficulty.
 
-    // CC V3: calibration factor to bring rosu output to akat-equivalent
-    // magnitude. Rosu's SKILL_MULTIPLIER is 26.0 vs akat's 25.18 (+3.3%)
-    // and the smoothstep angle shapes produce broader bonuses than akat's
-    // sin². This scalar compensates at the end.
-    const AKAT_CALIBRATION: f64 = 1.0; // 1.0 = no calibration, 0.94 = akat-equivalent
+    // VN aim evaluation still uses the legacy ccv3 evaluation structure,
+    // wheras aim_rx uses a more modernized structure.
+    // This is likely what leads to the discrepancy in aim pp between vanilla and relax, 
+    // so just adjusting base aim strain and bonus multipliers won't work bc of the less advanced evaluation structure.
+    // Akat calibration is being used to bring vanilla aim pp closer to what it should be worth with aim assist. 
+    // This is a subjective adjustment based on my experience and understanding of aim difficulty.
+    const AKAT_CALIBRATION: f64 = 0.60;
 
-    // CC V3: N/X pattern nerf for vanilla aim (lighter than RX since
-    // tapping + aiming N/X patterns is genuinely harder than on RX).
+    // N/X pattern nerf
     const NX_MAX_NERF_VANILLA: f64 = 0.22;
 
     // Aim slop: max nerf for constant-everything patterns.
@@ -365,7 +366,7 @@ impl AimEvaluator {
                 let bpm_fade = 1.0 - ((eff_bpm - 300.0) / 200.0).clamp(0.0, 1.0);
 
                 let nx_severity = nx_strength * dist_consistency * bpm_fade;
-                aim_strain *= 1.07 - Self::NX_MAX_NERF_VANILLA * nx_severity;
+                aim_strain *= 0.87 - Self::NX_MAX_NERF_VANILLA * nx_severity; // reducing base aim strain by 13% and then applying the NX nerf on top of that as an attempt to get aim pp close to what it should be worth with aim assist. This is a subjective adjustment based on my experience and understanding of aim difficulty.
             }
         }
 
@@ -405,7 +406,7 @@ impl AimEvaluator {
             }
         }
 
-        aim_strain *= 1.04 - slop_nerf;
+        aim_strain *= 0.87 - slop_nerf; // reducing base aim strain by 13% and then applying the slop nerf on top of that as an attempt to get aim pp close to what it should be worth with aim assist. This is a subjective adjustment based on my experience and understanding of aim difficulty.
 
         // ── CC V3: akat calibration ─────────────────────────────────
         aim_strain *= Self::AKAT_CALIBRATION;
