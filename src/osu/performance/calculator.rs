@@ -17,8 +17,7 @@ use crate::{
 };
 
 // * This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
-pub const PERFORMANCE_BASE_MULTIPLIER: f64 = 1.0; // No base multiplier applied in this version; adjust if needed.
-
+pub const PERFORMANCE_BASE_MULTIPLIER: f64 = 0.92; // 0.92 for ONLY vanilla osu!standard (and ap) not Relax.
 pub(super) struct OsuPerformanceCalculator<'mods> {
     attrs: OsuDifficultyAttributes,
     mods: &'mods GameMods,
@@ -81,7 +80,11 @@ impl OsuPerformanceCalculator<'_> {
 
         let total_hits = f64::from(total_hits);
 
-        let mut multiplier = PERFORMANCE_BASE_MULTIPLIER;
+        let mut multiplier = if self.mods.rx() {
+            1.0
+        } else {
+            PERFORMANCE_BASE_MULTIPLIER
+        }; // Relax retains the 1.0 multiplier because the relation between skill and pp already felt accurate.
 
         if self.mods.nf() {
             // CC V3: NoFail has its own standalone system (see nofail.rs).

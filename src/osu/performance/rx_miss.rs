@@ -44,7 +44,7 @@ const LOW_UNLUCKY_MULT: f64 = 0.40;
 const LOW_UNLUCKY_MAX_MISSES: u32 = 1;
 const LOW_ACC_OK: f64 = 0.99; // .99 instead of .97
 
-const N100_PER: f64 = 1.0 / 6.0; // 1.0 / 6.0 but harsher bc aim assist
+const N100_PER: f64 = 1.0 / 4.0; // 1.0 / 6.0 but harsher bc aim assist
 const N50_PER: f64 = 1.0 / 2.0; // in legit ccv3 this is 1.0 / 3.0 but its harsher here bc aim assist
 const N100_CAP: u32 = 700000; // basically no cap
 const N50_CAP: u32 = 700000; // basically no cap
