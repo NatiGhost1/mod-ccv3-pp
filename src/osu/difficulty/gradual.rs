@@ -202,6 +202,8 @@ impl Iterator for OsuGradualDifficulty {
 
             self.skills.aim.process(curr, &self.diff_objects);
             self.skills.aim_no_sliders.process(curr, &self.diff_objects);
+            self.skills.consistency.process(curr, &self.diff_objects);
+            self.skills.density.process(curr, &self.diff_objects);
             self.skills.speed.process(curr, &self.diff_objects);
             self.skills.flashlight.process(curr, &self.diff_objects);
 

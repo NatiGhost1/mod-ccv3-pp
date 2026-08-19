@@ -121,6 +121,7 @@ impl OsuDifficultySetup {
             ok_hit_window: hit_windows.od_ok.unwrap_or(0.0),
             meh_hit_window: hit_windows.od_meh.unwrap_or(0.0),
             density_multiplier: 1.0,
+            consistency_strictness: 0.5,
             ..Default::default()
         };
 
@@ -179,6 +180,7 @@ impl DifficultyValues {
         }
 
         attrs.density_multiplier = skills.density.clone().multiplier();
+        attrs.consistency_strictness = skills.consistency.clone().strictness();
 
         // ═══ CC V3: extract data from diff_objects before they drop ═
         // Build SpeedObjectData for tap_bpm and speed_precal.
@@ -304,10 +306,14 @@ impl DifficultyValues {
         let OsuSkills {
             aim,
             aim_no_sliders,
-            density: _,
+            consistency,
+            density,
             speed,
             flashlight,
         } = skills;
+
+        attrs.density_multiplier = density.clone().multiplier();
+        attrs.consistency_strictness = consistency.clone().strictness();
 
         let aim_difficulty_value = aim.cloned_difficulty_value();
 

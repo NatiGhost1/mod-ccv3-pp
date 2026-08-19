@@ -327,6 +327,18 @@ impl OsuPerformanceCalculator<'_> {
         .powf(1.0 / 1.1)
             * multiplier; // Changed values to more accurately reflect the importance of each skill in cheat servers
 
+        if !self.mods.ap() {
+            let consistency_mult = Self::calculate_consistency_multiplier(
+                self.attrs.consistency_strictness,
+                speed_deviation,
+            );
+            pp *= consistency_mult;
+            aim_value *= consistency_mult;
+            speed_value *= consistency_mult;
+            acc_value *= consistency_mult;
+            flashlight_value *= consistency_mult;
+        }
+
         OsuPerformanceAttributes {
             difficulty: self.attrs,
             pp_acc: acc_value,
@@ -805,6 +817,17 @@ impl OsuPerformanceCalculator<'_> {
         adjusted_speed_value = f64::lerp(adjusted_speed_value, speed_value, lerp);
 
         adjusted_speed_value / speed_value
+    }
+
+    fn calculate_consistency_multiplier(strictness: f64, speed_deviation: Option<f64>) -> f64 {
+        let Some(speed_deviation) = speed_deviation else {
+            return 1.0;
+        };
+
+        let excess_ur = (speed_deviation * 10.0 - 10.0).max(0.0);
+        let ur_factor = (excess_ur / 40.0).clamp(0.0, 1.0);
+
+        (1.0 - 0.12 * strictness * ur_factor).clamp(0.88, 1.0)
     }
 
     // * Miss penalty assumes that a player will miss on the hardest parts of a map,

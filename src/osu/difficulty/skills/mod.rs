@@ -1,12 +1,13 @@
 use crate::{any::difficulty::skills::StrainSkill, model::mods::GameMods, osu::object::OsuObject};
 
-use self::{aim::Aim, density::Density, flashlight::Flashlight, speed::Speed};
+use self::{aim::Aim, consistency::Consistency, density::Density, flashlight::Flashlight, speed::Speed};
 
 use super::{
     HD_FADE_IN_DURATION_MULTIPLIER, object::OsuDifficultyObject, scaling_factor::ScalingFactor,
 };
 
 pub mod aim;
+pub mod consistency;
 pub mod density;
 pub mod flashlight;
 pub mod speed;
@@ -15,6 +16,7 @@ pub mod strain;
 pub struct OsuSkills {
     pub aim: Aim,
     pub aim_no_sliders: Aim,
+    pub consistency: Consistency,
     pub density: Density,
     pub speed: Speed,
     pub flashlight: Flashlight,
@@ -41,6 +43,7 @@ impl OsuSkills {
 
         let aim = Aim::new(true, has_relax);
         let aim_no_sliders = Aim::new(false, has_relax);
+        let consistency = Consistency::new();
         let density = Density::new();
         let speed = Speed::new(hit_window, mods.ap());
         let flashlight = Flashlight::new(mods, scaling_factor.radius, time_preempt, time_fade_in);
@@ -48,6 +51,7 @@ impl OsuSkills {
         Self {
             aim,
             aim_no_sliders,
+            consistency,
             density,
             speed,
             flashlight,
@@ -57,6 +61,7 @@ impl OsuSkills {
     pub fn process(&mut self, curr: &OsuDifficultyObject<'_>, objects: &[OsuDifficultyObject<'_>]) {
         self.aim.process(curr, objects);
         self.aim_no_sliders.process(curr, objects);
+        self.consistency.process(curr, objects);
         self.density.process(curr, objects);
         self.speed.process(curr, objects);
         self.flashlight.process(curr, objects);

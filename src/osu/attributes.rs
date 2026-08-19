@@ -83,6 +83,8 @@ pub struct OsuDifficultyAttributes {
     pub cs: f64,
     /// CC V3: aim PP multiplier derived from local object density and spacing.
     pub density_multiplier: f64,
+    /// CC V3: map strictness used by the Relax consistency nerf.
+    pub consistency_strictness: f64,
     /// CC V3 (RX/AP): hardness proxy per 4-note chunk.
     pub rx_chunk_hardness: Vec<f64>,
     /// CC V3 (RX/AP): average delta_time per 4-note chunk.
