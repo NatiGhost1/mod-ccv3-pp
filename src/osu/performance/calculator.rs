@@ -390,6 +390,12 @@ impl OsuPerformanceCalculator<'_> {
         }
 
         let mut aim_value = Aim::difficulty_to_performance(aim_difficulty);
+        let density_multiplier = if self.attrs.density_multiplier > 0.0 {
+            self.attrs.density_multiplier
+        } else {
+            1.0
+        };
+        aim_value *= density_multiplier;
 
         let total_hits = self.total_hits();
 

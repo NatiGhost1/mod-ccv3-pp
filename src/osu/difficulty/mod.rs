@@ -120,6 +120,7 @@ impl OsuDifficultySetup {
             great_hit_window: hit_windows.od_great.unwrap_or(0.0),
             ok_hit_window: hit_windows.od_ok.unwrap_or(0.0),
             meh_hit_window: hit_windows.od_meh.unwrap_or(0.0),
+            density_multiplier: 1.0,
             ..Default::default()
         };
 
@@ -176,6 +177,8 @@ impl DifficultyValues {
         for hit_object in diff_objects.iter().take(take_diff_objects) {
             skills.process(hit_object, &diff_objects);
         }
+
+        attrs.density_multiplier = skills.density.clone().multiplier();
 
         // ═══ CC V3: extract data from diff_objects before they drop ═
         // Build SpeedObjectData for tap_bpm and speed_precal.
@@ -301,6 +304,7 @@ impl DifficultyValues {
         let OsuSkills {
             aim,
             aim_no_sliders,
+            density: _,
             speed,
             flashlight,
         } = skills;
