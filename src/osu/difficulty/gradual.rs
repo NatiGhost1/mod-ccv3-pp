@@ -206,6 +206,7 @@ impl Iterator for OsuGradualDifficulty {
             self.skills.density.process(curr, &self.diff_objects);
             self.skills.speed.process(curr, &self.diff_objects);
             self.skills.flashlight.process(curr, &self.diff_objects);
+            self.skills.memory.process(curr, &self.diff_objects);
 
             Self::increment_combo(curr.base, &mut self.attrs);
         } else if self.osu_objects.is_empty() {

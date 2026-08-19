@@ -6,7 +6,10 @@ use crate::{
         OsuDifficultyAttributes, OsuPerformanceAttributes, OsuScoreState,
         difficulty::{
             rating::OsuRatingCalculator,
-            skills::{aim::Aim, flashlight::Flashlight, speed::Speed, strain::OsuStrainSkill},
+            skills::{
+                aim::Aim, flashlight::Flashlight, memory::Memory, speed::Speed,
+                strain::OsuStrainSkill,
+            },
         },
         legacy_score_miss_calc::OsuLegacyScoreMissCalculator,
     },
@@ -292,6 +295,20 @@ impl OsuPerformanceCalculator<'_> {
             flashlight_value *= nf_mult;
         }
 
+        // Apply the common miss-position tax after each mode's standalone
+        // miss system. Lower achieved combo means the miss occurred earlier
+        // relative to the map's total possible combo.
+        let miss_combo_mult = Self::miss_combo_multiplier(
+            self.attrs.max_combo,
+            self.state.max_combo,
+            effective_miss_count,
+        );
+        pp *= miss_combo_mult;
+        aim_value *= miss_combo_mult;
+        speed_value *= miss_combo_mult;
+        acc_value *= miss_combo_mult;
+        flashlight_value *= miss_combo_mult;
+
         // CCV3 targeted PP-layer nerfs
 
         // OD < 9 accuracy nerf
@@ -342,6 +359,14 @@ impl OsuPerformanceCalculator<'_> {
             flashlight_value *= consistency_mult;
         }
 
+        if self.mods.td() {
+            pp *= 0.90;
+            aim_value *= 0.90;
+            speed_value *= 0.90;
+            acc_value *= 0.90;
+            flashlight_value *= 0.90;
+        }
+
         OsuPerformanceAttributes {
             difficulty: self.attrs,
             pp_acc: acc_value,
@@ -363,11 +388,22 @@ impl OsuPerformanceCalculator<'_> {
         effective_miss_count: f64,
         aim_estimated_slider_breaks: &mut f64,
     ) -> f64 {
-        if self.mods.ap() {
+        if self.mods.ap() && !self.mods.fl() {
             return 0.0;
         }
 
         let mut aim_difficulty = self.attrs.aim;
+
+        if self.mods.ap() {
+            let jump_factor = ((self.attrs.avg_jump_dist - 80.0) / 120.0).clamp(0.0, 1.0);
+            let bpm = if self.attrs.median_delta_time > 0.0 {
+                15_000.0 / self.attrs.median_delta_time
+            } else {
+                0.0
+            };
+            let bpm_factor = ((bpm - 180.0) / 100.0).clamp(0.0, 1.0);
+            aim_difficulty *= 0.20 + 0.80 * jump_factor * bpm_factor;
+        }
 
         if self.attrs.n_sliders > 0 && self.attrs.aim_difficult_slider_count > 0.0 {
             let estimate_improperly_followed_difficult_sliders = if self.using_classic_slider_acc {
@@ -414,9 +450,7 @@ impl OsuPerformanceCalculator<'_> {
 
         let total_hits = self.total_hits();
 
-        let len_bonus = 0.95 
-            + 0.4 * (total_hits / 2000.0).min(1.0)
-            + f64::from(u8::from(total_hits > 2000.0)) * (total_hits / 2000.0).log10() * 0.5;
+        let len_bonus = Self::length_bonus(total_hits, self.acc);
 
         aim_value *= len_bonus;
 
@@ -433,6 +467,7 @@ impl OsuPerformanceCalculator<'_> {
                 relevant_miss_count,
                 self.attrs.aim_difficult_strain_count,
             );
+            aim_value *= Self::low_od_miss_multiplier(relevant_miss_count, self.attrs.od());
         }
 
         // * TC bonuses are excluded when blinds is present as the increased visual difficulty is unimportant when notes cannot be seen.
@@ -471,9 +506,7 @@ impl OsuPerformanceCalculator<'_> {
 
         let total_hits = self.total_hits();
 
-        let len_bonus = 0.95
-            + 0.4 * (total_hits / 2000.0).min(1.0)
-            + f64::from(u8::from(total_hits > 2000.0)) * (total_hits / 2000.0).log10() * 0.5;
+        let len_bonus = Self::length_bonus(total_hits, self.acc);
 
         speed_value *= len_bonus;
 
@@ -490,6 +523,7 @@ impl OsuPerformanceCalculator<'_> {
                 relevant_miss_count,
                 self.attrs.speed_difficult_strain_count,
             );
+            speed_value *= Self::low_od_miss_multiplier(relevant_miss_count, self.attrs.od());
         }
 
         // * TC bonuses are excluded when blinds is present as the increased visual difficulty is unimportant when notes cannot be seen.
@@ -598,6 +632,10 @@ impl OsuPerformanceCalculator<'_> {
         }
 
         let mut flashlight_value = Flashlight::difficulty_to_performance(self.attrs.flashlight);
+        let memory_value = Memory::difficulty_to_performance(self.attrs.memory)
+            * (0.5 + self.acc / 2.0);
+        flashlight_value = (flashlight_value.powf(1.1) + memory_value.powf(1.1))
+            .powf(1.0 / 1.1);
 
         let total_hits = self.total_hits();
 
@@ -840,6 +878,23 @@ impl OsuPerformanceCalculator<'_> {
         0.96 / ((miss_count / (4.0 * diff_strain_count.ln().powf(0.94))) + 1.0)
     }
 
+    fn length_bonus(total_hits: f64, accuracy: f64) -> f64 {
+        let base = 0.95;
+        let raw = base
+            + 0.4 * (total_hits / 2000.0).min(1.0)
+            + f64::from(u8::from(total_hits > 2000.0)) * (total_hits / 2000.0).log10() * 0.5;
+        base + (raw - base) * accuracy.clamp(0.0, 1.0).powf(2.0)
+    }
+
+    fn low_od_miss_multiplier(misses: f64, od: f64) -> f64 {
+        if misses <= 0.0 || od >= 7.0 {
+            return 1.0;
+        }
+
+        let severity = ((7.0 - od) / 7.0).clamp(0.0, 1.0);
+        (1.0 - 0.14 * severity).powf(misses).max(0.30)
+    }
+
     fn get_combo_scaling_factor(&self) -> f64 {
         if self.attrs.max_combo == 0 {
             1.0
@@ -884,6 +939,26 @@ impl OsuPerformanceCalculator<'_> {
         let ratio = (f64::from(self.state.max_combo) / f64::from(self.attrs.max_combo))
             .clamp(0.0, 1.0);
         (0.85 + 0.15 * ratio.powf(0.35)).min(1.0)
+    }
+
+    /// Shared combo scaling for every miss system.
+    ///
+    /// A miss on a low-combo portion of a long map is more damaging than the
+    /// same miss after most of the map has already been completed. The factor
+    /// is relative to the map's total possible combo and leaves FCs untouched.
+    fn miss_combo_multiplier(
+        map_max_combo: u32,
+        player_max_combo: u32,
+        effective_miss_count: f64,
+    ) -> f64 {
+        if effective_miss_count <= 0.0 || map_max_combo == 0 {
+            return 1.0;
+        }
+
+        let combo_ratio = (f64::from(player_max_combo) / f64::from(map_max_combo))
+            .clamp(0.0, 1.0);
+
+        (0.75 + 0.25 * combo_ratio.powf(0.7)).clamp(0.75, 1.0)
     }
 
     /// CC V3 exponential consistency multiplier (non-RX, non-AP).
@@ -1062,5 +1137,50 @@ impl OsuPerformanceCalculator<'_> {
         result += acc_relief;
 
         result.min(1.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::OsuPerformanceCalculator;
+
+    #[test]
+    fn miss_combo_multiplier_leaves_fc_untouched() {
+        assert_eq!(
+            OsuPerformanceCalculator::miss_combo_multiplier(1000, 1000, 1.0),
+            1.0
+        );
+    }
+
+    #[test]
+    fn earlier_relative_misses_are_harsher() {
+        let early = OsuPerformanceCalculator::miss_combo_multiplier(1000, 64, 1.0);
+        let late = OsuPerformanceCalculator::miss_combo_multiplier(1000, 900, 1.0);
+
+        assert!(early < late);
+    }
+
+    #[test]
+    fn no_misses_bypass_combo_scaling() {
+        assert_eq!(
+            OsuPerformanceCalculator::miss_combo_multiplier(1000, 64, 0.0),
+            1.0
+        );
+    }
+
+    #[test]
+    fn length_bonus_rewards_accuracy() {
+        assert!(
+            OsuPerformanceCalculator::length_bonus(3000.0, 1.0)
+                > OsuPerformanceCalculator::length_bonus(3000.0, 0.80)
+        );
+    }
+
+    #[test]
+    fn low_od_misses_are_harsher() {
+        assert!(
+            OsuPerformanceCalculator::low_od_miss_multiplier(3.0, 5.0)
+                < OsuPerformanceCalculator::low_od_miss_multiplier(3.0, 8.0)
+        );
     }
 }

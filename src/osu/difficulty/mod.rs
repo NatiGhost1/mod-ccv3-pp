@@ -1,7 +1,9 @@
 use std::{cmp, pin::Pin};
 
 use rosu_map::section::general::GameMode;
-use skills::{aim::Aim, flashlight::Flashlight, speed::Speed, strain::OsuStrainSkill};
+use skills::{
+    aim::Aim, flashlight::Flashlight, memory::Memory, speed::Speed, strain::OsuStrainSkill,
+};
 
 use crate::{
     Beatmap,
@@ -122,6 +124,7 @@ impl OsuDifficultySetup {
             meh_hit_window: hit_windows.od_meh.unwrap_or(0.0),
             density_multiplier: 1.0,
             consistency_strictness: 0.5,
+            memory: 0.0,
             ..Default::default()
         };
 
@@ -310,10 +313,16 @@ impl DifficultyValues {
             density,
             speed,
             flashlight,
+            memory,
         } = skills;
 
         attrs.density_multiplier = density.clone().multiplier();
         attrs.consistency_strictness = consistency.clone().strictness();
+        attrs.memory = if mods.fl() {
+            memory.clone().difficulty()
+        } else {
+            0.0
+        };
 
         let aim_difficulty_value = aim.cloned_difficulty_value();
 
@@ -377,10 +386,13 @@ impl DifficultyValues {
         let base_aim_performance = Aim::difficulty_to_performance(aim_rating);
         let base_speed_performance = Speed::difficulty_to_performance(speed_rating);
         let base_flashlight_performance = Flashlight::difficulty_to_performance(flashlight_rating);
+        let memory_rating = if mods.fl() { attrs.memory } else { 0.0 };
+        let base_memory_performance = Memory::difficulty_to_performance(memory_rating);
 
         let base_performance = ((base_aim_performance).powf(1.1)
             + (base_speed_performance).powf(1.1)
-            + (base_flashlight_performance).powf(1.1))
+            + (base_flashlight_performance).powf(1.1)
+            + (base_memory_performance).powf(1.1))
         .powf(1.0 / 1.1);
 
         let star_rating = calculate_star_rating(base_performance);

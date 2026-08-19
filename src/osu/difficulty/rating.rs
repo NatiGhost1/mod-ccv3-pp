@@ -45,7 +45,7 @@ impl OsuRatingCalculator<'_> {
         let mut aim_rating = Self::calculate_difficulty_rating(aim_difficulty_value);
 
         if self.mods.td() {
-            aim_rating = aim_rating.powf(0.8);
+            aim_rating *= 1.0;
         }
 
         if self.mods.rx() {
@@ -203,7 +203,7 @@ impl OsuRatingCalculator<'_> {
         let mut flashlight_rating = Self::calculate_difficulty_rating(flashlight_difficulty_value);
 
         if self.mods.td() {
-            flashlight_rating = flashlight_rating.powf(0.8);
+            flashlight_rating *= 1.0;
         }
 
         if self.mods.rx() {

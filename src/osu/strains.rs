@@ -37,6 +37,7 @@ pub fn strains(difficulty: &Difficulty, map: &Beatmap) -> Result<OsuStrains, Con
                 speed,
                 consistency: _,
                 flashlight,
+                memory: _,
                 density: _,
             },
         attrs: _,
