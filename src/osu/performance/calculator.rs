@@ -616,13 +616,17 @@ impl OsuPerformanceCalculator<'_> {
             acc_value *= hd_bonus;
         }
 
-        if self.mods.fl() {
-            acc_value *= 1.02;
-        }
-
         if self.mods.rx() {
-            let accuracy_multiplier = 0.62 + 0.18 * better_acc_percentage.powf(10.0); // Increased accuracy multiplier for relax so high accuracy scores are rewarded more.
+            let mut accuracy_multiplier = 0.62 + 0.18 * better_acc_percentage.powf(10.0); // Increased accuracy multiplier for relax so high accuracy scores are rewarded more.
             acc_value *= accuracy_multiplier
+        } else {
+            let mut accuracy_multiplier = 0.75 + 0.25 * better_acc_percentage.powf(10.0); // Accuracy multiplier for non-relax scores.
+            acc_value *= accuracy_multiplier;
+        } else if self.mods.ap() {
+            let mut accuracy_multiplier = 1.0; // No accuracy multiplier for AP.
+            acc_value *= accuracy_multiplier;
+        } else if self.mods.fl() && !self.mods.ap() && !self.mods.rx() {
+            acc_value *= 1.02;
         }
 
         acc_value
