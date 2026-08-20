@@ -1,6 +1,6 @@
 use std::panic::{self, UnwindSafe};
 
-use rosu_pp::{
+use modded_ccv3_pp::{
     Beatmap,
     catch::{CatchPerformance, CatchPerformanceAttributes},
     mania::{ManiaPerformance, ManiaPerformanceAttributes},

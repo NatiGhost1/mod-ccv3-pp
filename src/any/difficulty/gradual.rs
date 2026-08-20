@@ -24,7 +24,7 @@ use crate::{
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, GradualDifficulty, Difficulty};
+/// use modded_ccv3_pp::{Beatmap, GradualDifficulty, Difficulty};
 ///
 /// let map = Beatmap::from_path("./resources/2785319.osu").unwrap();
 /// let difficulty = Difficulty::new().mods(64); // DT

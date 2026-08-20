@@ -289,10 +289,10 @@ impl<'map> Performance<'map> {
     ///
     /// # Example
     /// ```rust
-    /// use rosu_pp::any::hitresult_generator::{Closest, Composable, Fast};
-    /// # use rosu_pp::Performance;
+    /// use modded_ccv3_pp::any::hitresult_generator::{Closest, Composable, Fast};
+    /// # use modded_ccv3_pp::Performance;
     ///
-    /// # let map = rosu_pp::catch::CatchDifficultyAttributes::default();
+    /// # let map = modded_ccv3_pp::catch::CatchDifficultyAttributes::default();
     /// let attrs = Performance::new(map)
     ///     // Use `Closest` for osu!, taiko, and catch, and `Fast` for mania
     ///     .hitresult_generator::<Composable<Closest, Closest, Closest, Fast>>()

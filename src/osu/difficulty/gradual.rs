@@ -34,8 +34,8 @@ use super::{
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, Difficulty};
-/// use rosu_pp::osu::{Osu, OsuGradualDifficulty};
+/// use modded_ccv3_pp::{Beatmap, Difficulty};
+/// use modded_ccv3_pp::osu::{Osu, OsuGradualDifficulty};
 ///
 /// let map = Beatmap::from_path("./resources/2785319.osu").unwrap();
 ///

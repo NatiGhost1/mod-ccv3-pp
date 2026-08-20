@@ -22,8 +22,8 @@ use super::TaikoPerformanceAttributes;
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, Difficulty};
-/// use rosu_pp::taiko::{Taiko, TaikoGradualPerformance, TaikoScoreState};
+/// use modded_ccv3_pp::{Beatmap, Difficulty};
+/// use modded_ccv3_pp::taiko::{Taiko, TaikoGradualPerformance, TaikoScoreState};
 ///
 /// let map = Beatmap::from_path("./resources/1028484.osu").unwrap();
 ///

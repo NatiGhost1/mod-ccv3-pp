@@ -1,6 +1,6 @@
 use std::{env, fmt::Display, path::PathBuf, process::exit, time::SystemTime};
 
-use ccv3_pp::{any::PerformanceAttributes, Beatmap, Difficulty, GameMods, Performance};
+use modded_ccv3_pp::{any::PerformanceAttributes, Beatmap, Difficulty, GameMods, Performance};
 use rosu_mods::GameModsLegacy;
 
 const DEFAULT_PLAYS: usize = 5;
@@ -401,7 +401,7 @@ fn main() {
             Handling::Vanilla => perf_attrs.stars(),
             Handling::Relax => match &perf_attrs {
                 PerformanceAttributes::Osu(attrs) => {
-                    ccv3_pp::osu::weighted_star_rating(&attrs.difficulty)
+                    modded_ccv3_pp::osu::weighted_star_rating(&attrs.difficulty)
                 }
                 _ => 0.0,
             },

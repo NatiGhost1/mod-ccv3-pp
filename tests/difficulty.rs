@@ -1,6 +1,6 @@
 use std::panic::{self, UnwindSafe};
 
-use rosu_pp::{
+use modded_ccv3_pp::{
     Beatmap, Difficulty,
     catch::{Catch, CatchDifficultyAttributes},
     mania::{Mania, ManiaDifficultyAttributes},
@@ -601,6 +601,7 @@ impl AssertEq for OsuDifficultyAttributes {
             n_spinners,
             stars,
             max_combo,
+            ..
         } = self;
 
         assert_eq_float(*aim, expected.aim);

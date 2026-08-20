@@ -20,8 +20,8 @@ use super::{ManiaPerformanceAttributes, ManiaScoreState};
 /// # Example
 ///
 /// ```
-/// use rosu_pp::{Beatmap, Difficulty};
-/// use rosu_pp::mania::{Mania, ManiaGradualPerformance, ManiaScoreState};
+/// use modded_ccv3_pp::{Beatmap, Difficulty};
+/// use modded_ccv3_pp::mania::{Mania, ManiaGradualPerformance, ManiaScoreState};
 ///
 /// let map = Beatmap::from_path("./resources/1638954.osu").unwrap();
 ///
