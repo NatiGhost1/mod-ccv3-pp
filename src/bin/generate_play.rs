@@ -1,21 +1,32 @@
 use std::{env, fmt::Display, path::PathBuf, process::exit, time::SystemTime};
 
+use ccv3_pp::{any::PerformanceAttributes, Beatmap, Difficulty, GameMods, Performance};
 use rosu_mods::GameModsLegacy;
-use ccv3_pp::{Beatmap, Difficulty, GameMods, Performance};
 
 const DEFAULT_PLAYS: usize = 5;
 
 #[derive(Default)]
 struct SpecificPlay {
     mods: Option<(String, GameModsLegacy)>,
+    handling: Option<Handling>,
     combo: Option<u32>,
     misses: Option<u32>,
     accuracy: Option<f64>,
 }
 
+#[derive(Clone, Copy)]
+enum Handling {
+    Vanilla,
+    Relax,
+}
+
 impl SpecificPlay {
     fn is_empty(&self) -> bool {
-        self.mods.is_none() && self.combo.is_none() && self.misses.is_none() && self.accuracy.is_none()
+        self.mods.is_none()
+            && self.handling.is_none()
+            && self.combo.is_none()
+            && self.misses.is_none()
+            && self.accuracy.is_none()
     }
 }
 
@@ -23,6 +34,7 @@ fn print_usage(program: &str) {
     eprintln!("Usage: {program} <beatmap.osu> [plays] [seed] [options]");
     eprintln!("Options:");
     eprintln!("  --mods <mods>       Specify mods like HDDT, HR, EZHD, RX, AP, or NoMod");
+    eprintln!("  --handling <mode>   Select VN (vanilla) or RX (Relax) calculation handling");
     eprintln!("  --combo <combo>     Specify play combo");
     eprintln!("  --misses <misses>   Specify play misses");
     eprintln!("  --accuracy <acc>    Specify play accuracy in %");
@@ -195,6 +207,22 @@ fn main() {
                     exit(1);
                 }));
             }
+            "--handling" => {
+                let value = iter.next().unwrap_or_else(|| {
+                    eprintln!("Missing value for --handling");
+                    print_usage(&args[0]);
+                    exit(1);
+                });
+                explicit.handling = Some(match value.to_ascii_uppercase().as_str() {
+                    "VN" => Handling::Vanilla,
+                    "RX" => Handling::Relax,
+                    _ => {
+                        eprintln!("Invalid handling: {value}; expected VN or RX");
+                        print_usage(&args[0]);
+                        exit(1);
+                    }
+                });
+            }
             "--combo" => {
                 let value = iter.next().unwrap_or_else(|| {
                     eprintln!("Missing value for --combo");
@@ -319,11 +347,27 @@ fn main() {
             build_random_mod_combo(&mut rng)
         };
 
-        let mods = GameMods::from(mods_legacy);
+        let handling =
+            explicit
+                .handling
+                .unwrap_or(if mods_legacy.contains(GameModsLegacy::Relax) {
+                    Handling::Relax
+                } else {
+                    Handling::Vanilla
+                });
+        let calculation_mods_legacy = match handling {
+            Handling::Vanilla => mods_legacy - GameModsLegacy::Relax,
+            Handling::Relax => mods_legacy,
+        };
+        let calculation_mods = GameMods::from(calculation_mods_legacy);
 
-        let diff_attrs = Difficulty::new().mods(mods.clone()).calculate(&map);
+        let diff_attrs = Difficulty::new()
+            .mods(calculation_mods.clone())
+            .calculate(&map);
         let max_combo = diff_attrs.max_combo();
-        let misses = explicit.misses.unwrap_or_else(|| rng.gen_range(0, (max_combo / 15).max(1) + 1));
+        let misses = explicit
+            .misses
+            .unwrap_or_else(|| rng.gen_range(0, (max_combo / 15).max(1) + 1));
         let combo = explicit.combo.unwrap_or_else(|| {
             if misses == 0 {
                 max_combo
@@ -332,19 +376,53 @@ fn main() {
                 rng.gen_range(lower_combo, max_combo + 1)
             }
         });
-        let accuracy = explicit.accuracy.unwrap_or_else(|| 90.0 + (rng.gen_range(0, 1001) as f64 / 100.0));
+        let accuracy = explicit
+            .accuracy
+            .unwrap_or_else(|| 90.0 + (rng.gen_range(0, 1001) as f64 / 100.0));
 
         let perf_attrs = Performance::new(diff_attrs)
-            .mods(mods)
+            .mods(calculation_mods)
             .combo(combo)
             .misses(misses)
             .accuracy(accuracy)
             .calculate();
 
+        let (pp_aim, pp_speed, pp_acc, pp_flashlight) = match &perf_attrs {
+            PerformanceAttributes::Osu(attrs) => (
+                attrs.pp_aim,
+                attrs.pp_speed,
+                attrs.pp_acc,
+                attrs.pp_flashlight,
+            ),
+            _ => (0.0, 0.0, 0.0, 0.0),
+        };
+
+        let weighted_stars = match handling {
+            Handling::Vanilla => perf_attrs.stars(),
+            Handling::Relax => match &perf_attrs {
+                PerformanceAttributes::Osu(attrs) => {
+                    ccv3_pp::osu::weighted_star_rating(&attrs.difficulty)
+                }
+                _ => 0.0,
+            },
+        };
+
         println!("Play #{index}");
         println!("  Mods: {mod_list}");
-        println!("  Stars: {:.2}", perf_attrs.stars());
-        println!("  PP: {:.2}", perf_attrs.pp());
+        println!(
+            "  Handling: {}",
+            match handling {
+                Handling::Vanilla => "VN",
+                Handling::Relax => "RX",
+            }
+        );
+        println!("  Stars (default): {:.2}", perf_attrs.stars());
+        println!("  Stars (weighted): {:.2}", weighted_stars);
+        println!("  PP total: {:.2}", perf_attrs.pp());
+        println!("  PP aim: {:.2}", pp_aim);
+        println!("  PP speed: {:.2}", pp_speed);
+        println!("  PP accuracy: {:.2}", pp_acc);
+        println!("  PP flashlight: {:.2}", pp_flashlight);
         println!("  Combo: {combo}/{max_combo}");
         println!("  Misses: {misses}");
         println!("  Accuracy: {accuracy:.2}%\n");
