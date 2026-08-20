@@ -1,9 +1,7 @@
 use std::{cmp, f64::consts::PI};
 
 use crate::{
-    GameMods,
     osu::{
-        OsuDifficultyAttributes, OsuPerformanceAttributes, OsuScoreState,
         difficulty::{
             rating::OsuRatingCalculator,
             skills::{
@@ -12,11 +10,13 @@ use crate::{
             },
         },
         legacy_score_miss_calc::OsuLegacyScoreMissCalculator,
+        OsuDifficultyAttributes, OsuPerformanceAttributes, OsuScoreState,
     },
     util::{
         difficulty::{erf, erf_inv, logistic, reverse_lerp, smoothstep},
         float_ext::FloatExt,
     },
+    GameMods,
 };
 
 // * This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
@@ -122,22 +122,22 @@ impl OsuPerformanceCalculator<'_> {
                 + f64::from(self.state.hitresults.n50) * n50_mult)
                 .min(total_hits);
         }
-            let penalty_miss_count = if self.mods.rx() {
-                // CC V3 v3: strain-peak based relax miss model (see rx_miss.rs).
-                // This REPLACES the literal miss count as the primary lever for
-                // relax: misses on the highest strain peaks (first 2) and on
-                // unlucky low peaks cost less; mid peaks are normal; Oks/Mehs
-                // inflate it with hard caps + a variance-aware soft stop.
-                super::rx_miss::rx_strain_weighted_misses(
-                    &self.attrs.rx_chunk_hardness,
-                    self.state.hitresults.n300,
-                    self.state.hitresults.n100,
-                    self.state.hitresults.n50,
-                    self.state.hitresults.misses,
-                )
-            } else {
-                effective_miss_count
-            };
+        let penalty_miss_count = if self.mods.rx() {
+            // CC V3 v3: strain-peak based relax miss model (see rx_miss.rs).
+            // This REPLACES the literal miss count as the primary lever for
+            // relax: misses on the highest strain peaks (first 2) and on
+            // unlucky low peaks cost less; mid peaks are normal; Oks/Mehs
+            // inflate it with hard caps + a variance-aware soft stop.
+            super::rx_miss::rx_strain_weighted_misses(
+                &self.attrs.rx_chunk_hardness,
+                self.state.hitresults.n300,
+                self.state.hitresults.n100,
+                self.state.hitresults.n50,
+                self.state.hitresults.misses,
+            )
+        } else {
+            effective_miss_count
+        };
 
         let speed_deviation = self.calculate_speed_deviation();
 
@@ -611,7 +611,7 @@ impl OsuPerformanceCalculator<'_> {
         } else if self.mods.hd() || self.mods.tc() {
             let mut hd_bonus = 1.0; // HD bonus set to 1.0 (no bonus) because of the exsistance of HD remover.
 
-            acc_value *= hd_bonus; 
+            acc_value *= hd_bonus;
         }
 
         if self.mods.fl() {
@@ -632,10 +632,15 @@ impl OsuPerformanceCalculator<'_> {
         }
 
         let mut flashlight_value = Flashlight::difficulty_to_performance(self.attrs.flashlight);
-        let memory_value = Memory::difficulty_to_performance(self.attrs.memory)
-            * (0.5 + self.acc / 2.0);
-        flashlight_value = (flashlight_value.powf(1.1) + memory_value.powf(1.1))
-            .powf(1.0 / 1.1);
+        let memory_value = Memory::performance_value(
+            self.attrs.memory,
+            self.acc,
+            f64::from(self.state.max_combo),
+            f64::from(self.attrs.max_combo),
+            effective_miss_count,
+            self.total_hits(),
+        );
+        flashlight_value = (flashlight_value.powf(1.1) + memory_value.powf(1.1)).powf(1.0 / 1.1);
 
         let total_hits = self.total_hits();
 
@@ -936,8 +941,8 @@ impl OsuPerformanceCalculator<'_> {
         if self.attrs.max_combo == 0 {
             return 1.0;
         }
-        let ratio = (f64::from(self.state.max_combo) / f64::from(self.attrs.max_combo))
-            .clamp(0.0, 1.0);
+        let ratio =
+            (f64::from(self.state.max_combo) / f64::from(self.attrs.max_combo)).clamp(0.0, 1.0);
         (0.85 + 0.15 * ratio.powf(0.35)).min(1.0)
     }
 
@@ -955,8 +960,7 @@ impl OsuPerformanceCalculator<'_> {
             return 1.0;
         }
 
-        let combo_ratio = (f64::from(player_max_combo) / f64::from(map_max_combo))
-            .clamp(0.0, 1.0);
+        let combo_ratio = (f64::from(player_max_combo) / f64::from(map_max_combo)).clamp(0.0, 1.0);
 
         (0.75 + 0.25 * combo_ratio.powf(0.7)).clamp(0.75, 1.0)
     }
@@ -1035,7 +1039,7 @@ impl OsuPerformanceCalculator<'_> {
             let remaining_scaled = remaining_n50.powf(1.12) * remaining_scale;
 
             guaranteed_count + remaining_scaled;
-            
+
             // OD factor: exponential, steep below OD 5
             let od_factor = if od <= 1.0 {
                 1.0
@@ -1054,12 +1058,11 @@ impl OsuPerformanceCalculator<'_> {
 
             // Combo factor: maps >= 1300 combo scale down, 0 at 10000
             let combo_factor = if map_max_combo >= 1300 {
-                (1.0 - (f64::from(map_max_combo) - 1300.0) / (10000.0 - 1300.0))
-                    .clamp(0.0, 1.0)
+                (1.0 - (f64::from(map_max_combo) - 1300.0) / (10000.0 - 1300.0)).clamp(0.0, 1.0)
             } else {
                 1.0
             };
-            
+
             // Total = (First X weighted at 1.0) + (The rest scaled down)
             guaranteed_count + (remaining_n50 * od_factor * ar_factor * combo_factor)
         };
@@ -1130,10 +1133,9 @@ impl OsuPerformanceCalculator<'_> {
 
         // Accuracy calibration: high acc on long maps → small relief
         let acc = self.acc;
-        let acc_relief = 0.0
-            * ((acc - 0.95) / 0.05).clamp(0.0, 1.0)
-            * (combo_f / 4000.0).clamp(0.0, 1.0); // Strictened combo factor to (combo_f / 4000.0) because (combo_f / 2000.0) is too lenient in a cheat environment where accuracy is the primary measurement for skill.
-        
+        let acc_relief =
+            0.0 * ((acc - 0.95) / 0.05).clamp(0.0, 1.0) * (combo_f / 4000.0).clamp(0.0, 1.0); // Strictened combo factor to (combo_f / 4000.0) because (combo_f / 2000.0) is too lenient in a cheat environment where accuracy is the primary measurement for skill.
+
         result += acc_relief;
 
         result.min(1.0)
