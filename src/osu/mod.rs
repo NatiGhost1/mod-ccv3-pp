@@ -1,18 +1,21 @@
 use rosu_map::util::Pos;
 
 use crate::{
-    Difficulty,
     any::CalculateError,
     model::{
         beatmap::Beatmap,
         mode::{ConvertError, IGameMode},
     },
+    Difficulty,
 };
 
 pub use self::{
     attributes::{OsuDifficultyAttributes, OsuPerformanceAttributes},
     difficulty::gradual::OsuGradualDifficulty,
-    performance::{InspectOsuPerformance, OsuPerformance, gradual::OsuGradualPerformance},
+    performance::{
+        gradual::OsuGradualPerformance, relax_marathon::weighted_star_rating,
+        InspectOsuPerformance, OsuPerformance,
+    },
     score_state::{OsuHitResults, OsuScoreOrigin, OsuScoreState},
     strains::OsuStrains,
 };

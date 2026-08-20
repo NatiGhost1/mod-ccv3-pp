@@ -3,8 +3,8 @@ use std::borrow::Cow;
 use rosu_map::section::{general::GameMode, hit_objects::CurveBuffers};
 
 use crate::{
-    Difficulty,
     model::{beatmap::Beatmap, mode::ConvertError, mods::Reflection},
+    Difficulty,
 };
 
 use super::{

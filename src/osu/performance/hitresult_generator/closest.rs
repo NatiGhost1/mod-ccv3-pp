@@ -2,8 +2,8 @@ use std::cmp;
 
 use crate::{
     any::{
-        HitResultGenerator,
         hitresult_generator::{Closest, IgnoreAccuracy},
+        HitResultGenerator,
     },
     osu::{InspectOsuPerformance, Osu, OsuHitResults},
 };
@@ -260,9 +260,9 @@ impl HitResultGenerator<Osu> for Closest {
 
 #[cfg(test)]
 mod tests {
-    use rosu_mods::{GameMod, generated_mods::ClassicOsu};
+    use rosu_mods::{generated_mods::ClassicOsu, GameMod};
 
-    use crate::{Difficulty, any::HitResultPriority, osu::OsuDifficultyAttributes};
+    use crate::{any::HitResultPriority, osu::OsuDifficultyAttributes, Difficulty};
 
     use super::*;
 

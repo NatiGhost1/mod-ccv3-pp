@@ -218,7 +218,7 @@ impl AimRxEvaluator {
     const WIDE_ANGLE_MULTIPLIER: f64 = 1.15; // Wide angles in my opinion are more difficult than acute angles with aim assist, so I reduced the multiplier to reflect that. This is a subjective adjustment based on my experience and understanding of aim difficulty.
     const ACUTE_ANGLE_MULTIPLIER: f64 = 1.0; // Acute angles in my opinion are less difficult than wide angles with aim assist, so I reduced the multiplier to reflect that. This is a subjective adjustment based on my experience and understanding of aim difficulty.
     const SLIDER_MULTIPLIER: f64 = 0.55; // Reduced slider bonus to avoid over-boosting aim pp on maps with many complex fast sliders.
-    const VELOCITY_CHANGE_MULTIPLIER: f64 = 0.85; // Velocity change bonus is slightly increased to reward technical aim that requires quick adjustments in speed. 
+    const VELOCITY_CHANGE_MULTIPLIER: f64 = 0.85; // Velocity change bonus is slightly increased to reward technical aim that requires quick adjustments in speed.
     const WIGGLE_MULTIPLIER: f64 = 0.81; // Wiggly patterns are generally less difficult in a cheat environment than straight aim patterns, so I reduced the multiplier to reflect that. This is a subjective adjustment based on my experience and understanding of aim difficulty.
 
     const AKAT_CALIBRATION: f64 = 1.0; // No Akat calibration applied in this version; adjust if needed.
@@ -272,7 +272,7 @@ impl AimRxEvaluator {
     const NX_MAX_NERF: f64 = 0.30;
     #[warn(dead_code)]
     const SLOP_MAX_NERF: f64 = 0.35;
-    
+
     const TECH_MAX_BOOST: f64 = 0.08;
 
     // Additional tuning constants
@@ -292,8 +292,7 @@ impl AimRxEvaluator {
         curr: &'a OsuDifficultyObject<'a>,
         diff_objects: &'a [OsuDifficultyObject<'a>],
     ) -> bool {
-        let (delta_mean, delta_stddev, n) =
-            windowed_delta_stats(curr, diff_objects, ANGLE_WINDOW);
+        let (delta_mean, delta_stddev, n) = windowed_delta_stats(curr, diff_objects, ANGLE_WINDOW);
         if n < Self::STREAM_SIG_MIN_NOTES || delta_mean <= 0.0 {
             return false;
         }
@@ -328,9 +327,9 @@ impl AimRxEvaluator {
             return false;
         }
 
-        Self::NEUTRAL_FLOW_DIST_RANGES.iter().any(|&(low, high)| {
-            dist_mean >= low && dist_mean <= high
-        })
+        Self::NEUTRAL_FLOW_DIST_RANGES
+            .iter()
+            .any(|&(low, high)| dist_mean >= low && dist_mean <= high)
     }
 
     // Farm streak considers all farm-related nerfs (N/X, slop, cross-screen).
@@ -512,11 +511,10 @@ impl AimRxEvaluator {
             let rep_strength = 1.0 - variance_factor;
             let wide_rep_nerf = rep_strength * 0.25;
 
-            wide_angle_bonus *= 
-                angle_bonus 
+            wide_angle_bonus *= angle_bonus
                 * smootherstep(osu_curr_obj.lazy_jump_dist, 0.0, f64::from(DIAMETER))
                 * (1.0 - wide_rep_nerf).max(0.0);
-            
+
             wiggle_bonus = angle_bonus
                 * smootherstep(
                     osu_curr_obj.lazy_jump_dist,
@@ -660,9 +658,17 @@ impl AimRxEvaluator {
 
             if angle_n >= 4 && dist_n >= 4 && vel_n >= 4 {
                 let angle_uniformity = (1.0 - (angle_stddev / 0.3).clamp(0.0, 1.0)).max(0.0);
-                let dist_cv = if dist_mean > 0.0 { dist_stddev / dist_mean } else { 1.0 };
+                let dist_cv = if dist_mean > 0.0 {
+                    dist_stddev / dist_mean
+                } else {
+                    1.0
+                };
                 let dist_uniformity = (1.0 - (dist_cv / 0.15).clamp(0.0, 1.0)).max(0.0);
-                let vel_cv = if vel_mean > 0.0 { vel_stddev / vel_mean } else { 1.0 };
+                let vel_cv = if vel_mean > 0.0 {
+                    vel_stddev / vel_mean
+                } else {
+                    1.0
+                };
                 let vel_uniformity = (1.0 - (vel_cv / 0.15).clamp(0.0, 1.0)).max(0.0);
 
                 let slop_severity = angle_uniformity * dist_uniformity * vel_uniformity;
@@ -677,7 +683,10 @@ impl AimRxEvaluator {
         };
 
         // ── Cross-screen constant-distance nerf ─────────────────────
-        if !flow_active && !skip_farm_detection && osu_curr_obj.adjusted_delta_time >= Self::CONSTANT_DIST_BPM_STRAIN_TIME {
+        if !flow_active
+            && !skip_farm_detection
+            && osu_curr_obj.adjusted_delta_time >= Self::CONSTANT_DIST_BPM_STRAIN_TIME
+        {
             let curr_d = osu_curr_obj.lazy_jump_dist;
             let prev_d = osu_last_obj.lazy_jump_dist;
             let max_d = curr_d.max(prev_d);
@@ -694,8 +703,7 @@ impl AimRxEvaluator {
 
                 if !is_edge_to_edge && change_ratio < Self::CONSTANT_DIST_RATIO {
                     let dist_factor = 1.0
-                        - ((max_d - 80.0) / (Self::EDGE_TO_EDGE_THRESHOLD - 80.0))
-                            .clamp(0.0, 1.0);
+                        - ((max_d - 80.0) / (Self::EDGE_TO_EDGE_THRESHOLD - 80.0)).clamp(0.0, 1.0);
                     let severity = (1.0 - (change_ratio / Self::CONSTANT_DIST_RATIO)) * dist_factor;
                     cross_screen_nerf = 0.15 * severity;
                 }
@@ -752,16 +760,22 @@ impl AimRxEvaluator {
 
             if angle_n >= 4 && vel_n >= 4 {
                 let angle_variety = ((angle_stddev - 0.6) / 0.4).clamp(0.0, 1.0);
-                let vel_cv = if vel_mean > 0.0 { vel_stddev / vel_mean } else { 0.0 };
+                let vel_cv = if vel_mean > 0.0 {
+                    vel_stddev / vel_mean
+                } else {
+                    0.0
+                };
                 let vel_variety = ((vel_cv - 0.25) / 0.25).clamp(0.0, 1.0);
                 let tech_signal = angle_variety * vel_variety;
                 tech_boost = Self::TECH_MAX_BOOST * tech_signal;
             }
         }
 
-        let farm_severity = Self::combine_farm_severity(nx_severity, slop_severity, cross_screen_nerf / 0.15);
+        let farm_severity =
+            Self::combine_farm_severity(nx_severity, slop_severity, cross_screen_nerf / 0.15);
         let farm_nerf = (Self::FARM_MAX_NERF * farm_severity).clamp(0.0, Self::FARM_MAX_NERF);
-        let farm_nerf = farm_nerf * Self::relax_repeat_nerf_radius_factor(osu_curr_obj.circle_radius);
+        let farm_nerf =
+            farm_nerf * Self::relax_repeat_nerf_radius_factor(osu_curr_obj.circle_radius);
 
         let recent_farm = Self::recent_farm_streak(osu_curr_obj, diff_objects, 5);
 
@@ -789,8 +803,8 @@ impl AimRxEvaluator {
             if bpm_weight > 0.0 {
                 // 1.0 at/under STREAM_DIST_FULL, fading to 0.0 at STREAM_DIST_EXEMPT.
                 let dist = osu_curr_obj.lazy_jump_dist;
-                let dist_weight = 1.0
-                    - reverse_lerp(dist, Self::STREAM_DIST_FULL, Self::STREAM_DIST_EXEMPT);
+                let dist_weight =
+                    1.0 - reverse_lerp(dist, Self::STREAM_DIST_FULL, Self::STREAM_DIST_EXEMPT);
                 let stream_severity = bpm_weight * dist_weight;
                 aim_strain *= 0.50 - Self::STREAM_MAX_NERF * stream_severity;
             }

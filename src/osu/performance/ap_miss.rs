@@ -45,8 +45,7 @@ pub(crate) fn ap_miss_multiplier(
     // Only real misses contribute. Toned-down exponent (0.65 vs 0.8).
     // Combo scaling is NOT applied to n50 penalties per spec.
     let combo_scaling = if real_misses > 0 && map_max_combo > 0 {
-        let ratio =
-            (f64::from(state_max_combo) / f64::from(map_max_combo)).clamp(0.0, 1.0);
+        let ratio = (f64::from(state_max_combo) / f64::from(map_max_combo)).clamp(0.0, 1.0);
         (0.70 + 0.30 * ratio.powf(0.65)).min(1.0)
     } else {
         1.0
@@ -150,7 +149,7 @@ pub(crate) fn ap_miss_multiplier(
                 .sum::<f64>()
                 / chunk_avg_delta.len() as f64;
             let cv = variance.sqrt() / mean_d; // coefficient of variation
-            // cv > 0.15 = meaningful BPM variation → up to 5% relief
+                                               // cv > 0.15 = meaningful BPM variation → up to 5% relief
             if cv > 0.15 {
                 ((cv - 0.15) / 0.30).clamp(0.0, 1.0) * 0.05
             } else {

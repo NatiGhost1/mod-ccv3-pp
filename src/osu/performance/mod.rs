@@ -7,10 +7,10 @@ use self::calculator::OsuPerformanceCalculator;
 pub use self::{calculator::PERFORMANCE_BASE_MULTIPLIER, inspect::InspectOsuPerformance};
 
 use crate::{
-    Beatmap,
     any::{
-        CalculateError, Difficulty, HitResultGenerator, HitResultPriority, InspectablePerformance,
-        IntoModePerformance, IntoPerformance, Performance, hitresult_generator::Fast,
+        hitresult_generator::Fast, CalculateError, Difficulty, HitResultGenerator,
+        HitResultPriority, InspectablePerformance, IntoModePerformance, IntoPerformance,
+        Performance,
     },
     catch::CatchPerformance,
     mania::ManiaPerformance,
@@ -18,25 +18,26 @@ use crate::{
     osu::OsuHitResults,
     taiko::TaikoPerformance,
     util::map_or_attrs::MapOrAttrs,
+    Beatmap,
 };
 
 use super::{
-    Osu,
     attributes::OsuPerformanceAttributes,
     score_state::{OsuScoreOrigin, OsuScoreState},
+    Osu,
 };
 
-mod calculator;
-pub mod rx_miss;
 pub mod ap_miss;
-pub mod relax_marathon;
-pub mod marathon;
-pub mod speed_rework;
-pub mod gradual;
 pub mod auto_marathon;
-pub mod nofail;
+mod calculator;
+pub mod gradual;
 mod hitresult_generator;
 mod inspect;
+pub mod marathon;
+pub mod nofail;
+pub mod relax_marathon;
+pub mod rx_miss;
+pub mod speed_rework;
 
 /// Performance calculator on osu!standard maps.
 #[derive(Clone, Debug)]
@@ -657,10 +658,10 @@ mod test {
     use std::sync::OnceLock;
 
     use crate::{
-        Beatmap,
         any::{DifficultyAttributes, PerformanceAttributes},
         osu::OsuDifficultyAttributes,
         taiko::{TaikoDifficultyAttributes, TaikoPerformanceAttributes},
+        Beatmap,
     };
 
     use super::*;
@@ -831,18 +832,14 @@ mod test {
 
         assert!(OsuPerformance::try_new(TaikoDifficultyAttributes::default()).is_none());
         assert!(OsuPerformance::try_new(TaikoPerformanceAttributes::default()).is_none());
-        assert!(
-            OsuPerformance::try_new(DifficultyAttributes::Taiko(
-                TaikoDifficultyAttributes::default()
-            ))
-            .is_none()
-        );
-        assert!(
-            OsuPerformance::try_new(PerformanceAttributes::Taiko(
-                TaikoPerformanceAttributes::default()
-            ))
-            .is_none()
-        );
+        assert!(OsuPerformance::try_new(DifficultyAttributes::Taiko(
+            TaikoDifficultyAttributes::default()
+        ))
+        .is_none());
+        assert!(OsuPerformance::try_new(PerformanceAttributes::Taiko(
+            TaikoPerformanceAttributes::default()
+        ))
+        .is_none());
         assert!(OsuPerformance::try_new(&map).is_none());
         assert!(OsuPerformance::try_new(map).is_none());
     }

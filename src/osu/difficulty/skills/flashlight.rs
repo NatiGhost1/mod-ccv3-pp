@@ -1,14 +1,15 @@
 use crate::{
-    GameMods,
     any::difficulty::{
         object::{HasStartTime, IDifficultyObject},
         skills::strain_decay,
     },
     osu::difficulty::{evaluators::FlashlightEvaluator, object::OsuDifficultyObject},
     util::traits::IEnumerable,
+    GameMods,
 };
 
 define_skill! {
+    #[derive(Clone)]
     pub struct Flashlight: StrainSkill => [OsuDifficultyObject<'a>][OsuDifficultyObject<'a>] {
         current_strain: f64,
         has_hidden_mod: bool,

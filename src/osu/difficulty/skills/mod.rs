@@ -1,12 +1,12 @@
 use crate::{any::difficulty::skills::StrainSkill, model::mods::GameMods, osu::object::OsuObject};
 
 use self::{
-    aim::Aim, consistency::Consistency, density::Density, flashlight::Flashlight,
-    memory::Memory, speed::Speed,
+    aim::Aim, consistency::Consistency, density::Density, flashlight::Flashlight, memory::Memory,
+    speed::Speed,
 };
 
 use super::{
-    HD_FADE_IN_DURATION_MULTIPLIER, object::OsuDifficultyObject, scaling_factor::ScalingFactor,
+    object::OsuDifficultyObject, scaling_factor::ScalingFactor, HD_FADE_IN_DURATION_MULTIPLIER,
 };
 
 pub mod aim;

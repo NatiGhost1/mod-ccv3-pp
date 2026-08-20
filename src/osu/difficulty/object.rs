@@ -7,7 +7,7 @@ use crate::{
     osu::object::{OsuObject, OsuObjectKind},
 };
 
-use super::{HD_FADE_OUT_DURATION_MULTIPLIER, scaling_factor::ScalingFactor};
+use super::{scaling_factor::ScalingFactor, HD_FADE_OUT_DURATION_MULTIPLIER};
 
 pub struct OsuDifficultyObject<'a> {
     pub idx: usize,

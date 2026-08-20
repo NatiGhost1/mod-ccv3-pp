@@ -1,7 +1,7 @@
 use std::{cmp, mem};
 
 use crate::{
-    any::{HitResultGenerator, HitResultPriority, hitresult_generator::IgnoreAccuracy},
+    any::{hitresult_generator::IgnoreAccuracy, HitResultGenerator, HitResultPriority},
     osu::{InspectOsuPerformance, Osu, OsuHitResults},
 };
 
@@ -72,7 +72,7 @@ impl HitResultGenerator<Osu> for IgnoreAccuracy {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Difficulty, osu::OsuDifficultyAttributes};
+    use crate::{osu::OsuDifficultyAttributes, Difficulty};
 
     use super::*;
 

@@ -1,8 +1,8 @@
 use std::convert::identity;
 
 use crate::{
-    GameMods,
     util::{difficulty::reverse_lerp, float_ext::FloatExt},
+    GameMods,
 };
 
 pub struct OsuRatingCalculator<'mods> {
@@ -110,15 +110,15 @@ impl OsuRatingCalculator<'_> {
 
         let mut nerf = 0.78;
         let n_disabled = 1.0;
-        
+
         // grace set to false by default
         let mut grace = false;
-        
+
         // Disables HDHR nerf for NF/AP
         if self.mods.ap() || self.mods.nf() {
             grace = true
         } else {
-            grace = false  // Otherwise nerf remains active
+            grace = false // Otherwise nerf remains active
         }
 
         if grace {
@@ -141,7 +141,7 @@ impl OsuRatingCalculator<'_> {
         if self.mods.nf() {
             speed_rating *= 1.0;
         }
-        
+
         // Compensate for HDHR being disproportinately overweight (temporary until fix)
         if self.mods.hr() && self.mods.hd() {
             speed_rating *= nerf;
@@ -162,15 +162,15 @@ impl OsuRatingCalculator<'_> {
 
         // Autopilot awards 20% of the standard bonus instead of removing it entirely.
         let ar_factor = if self.mods.ap() {
-        if self.approach_rate > 10.33 {
-            0.3 * (self.approach_rate - 10.33) * 0.2 // 20% of normal bonus
-        } else {
-            0.0 // Returns 0.0 if AR is 10.33 or lower
-        }
+            if self.approach_rate > 10.33 {
+                0.3 * (self.approach_rate - 10.33) * 0.2 // 20% of normal bonus
+            } else {
+                0.0 // Returns 0.0 if AR is 10.33 or lower
+            }
         } else if self.approach_rate > 10.33 {
-        0.3 * (self.approach_rate - 10.33)
+            0.3 * (self.approach_rate - 10.33)
         } else {
-        0.0
+            0.0
         };
 
         // * Buff for longer maps with high AR.
@@ -215,7 +215,7 @@ impl OsuRatingCalculator<'_> {
         } // Again ----------> ESSENTIALLY <----------- trivial flashlight will always be hard
 
         if self.mods.nf() {
-            flashlight_rating *= 1.0; 
+            flashlight_rating *= 1.0;
         }
 
         if let Some(magnetised_strength) = self.mods.attraction_strength() {

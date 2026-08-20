@@ -70,22 +70,34 @@ fn detect_nx_pattern<'a>(
     window: usize,
 ) -> f64 {
     let mut angles: Vec<f64> = Vec::with_capacity(window + 1);
-    if let Some(a) = curr.angle { angles.push(a); }
+    if let Some(a) = curr.angle {
+        angles.push(a);
+    }
     for back in 0..window {
         if let Some(prev) = curr.previous(back, diff_objects) {
-            if let Some(a) = prev.angle { angles.push(a); }
-        } else { break; }
+            if let Some(a) = prev.angle {
+                angles.push(a);
+            }
+        } else {
+            break;
+        }
     }
-    if angles.len() < 4 { return 0.0; }
+    if angles.len() < 4 {
+        return 0.0;
+    }
 
     let evens: Vec<f64> = angles.iter().step_by(2).copied().collect();
     let odds: Vec<f64> = angles.iter().skip(1).step_by(2).copied().collect();
-    if evens.len() < 2 || odds.len() < 2 { return 0.0; }
+    if evens.len() < 2 || odds.len() < 2 {
+        return 0.0;
+    }
 
     let even_mean = evens.iter().sum::<f64>() / evens.len() as f64;
     let odd_mean = odds.iter().sum::<f64>() / odds.len() as f64;
-    let even_stddev = (evens.iter().map(|a| (a - even_mean).powi(2)).sum::<f64>() / evens.len() as f64).sqrt();
-    let odd_stddev = (odds.iter().map(|a| (a - odd_mean).powi(2)).sum::<f64>() / odds.len() as f64).sqrt();
+    let even_stddev =
+        (evens.iter().map(|a| (a - even_mean).powi(2)).sum::<f64>() / evens.len() as f64).sqrt();
+    let odd_stddev =
+        (odds.iter().map(|a| (a - odd_mean).powi(2)).sum::<f64>() / odds.len() as f64).sqrt();
 
     let cluster_tight = even_stddev < 0.25 && odd_stddev < 0.25;
     let clusters_differ = (even_mean - odd_mean).abs() > 0.3;
@@ -135,9 +147,9 @@ impl AimEvaluator {
 
     // VN aim evaluation still uses the legacy ccv3 evaluation structure,
     // whereas aim_rx uses a more modernized structure.
-    // This is likely what leads to the discrepancy in aim pp between vanilla and relax, 
+    // This is likely what leads to the discrepancy in aim pp between vanilla and relax,
     // so just adjusting base aim strain and bonus multipliers won't work bc of the less advanced evaluation structure.
-    // Akat calibration is being used to bring vanilla aim pp closer to what it should be worth with aim assist. 
+    // Akat calibration is being used to bring vanilla aim pp closer to what it should be worth with aim assist.
     // This is a subjective adjustment based on my experience and understanding of aim difficulty.
     const AKAT_CALIBRATION: f64 = 0.60;
 
@@ -245,22 +257,19 @@ impl AimEvaluator {
             };
             let rep_strength = 1.0 - variance_factor;
 
-            let wide_rep_raw = wide_angle_bonus
-                .min(Self::calc_wide_angle_bonus(last_angle).powf(3.0));
+            let wide_rep_raw =
+                wide_angle_bonus.min(Self::calc_wide_angle_bonus(last_angle).powf(3.0));
             let wide_penalty = (rep_strength * 0.7 + wide_rep_raw * 0.3) * (1.0 - high_bpm_t);
             let wide_rep_buff = high_bpm_t * 0.15;
             wide_angle_bonus *= angle_bonus
                 * smootherstep(osu_curr_obj.lazy_jump_dist, 0.0, f64::from(DIAMETER))
                 * ((1.0 - wide_penalty + wide_rep_buff).max(0.0));
 
-            let acute_rep_raw = acute_angle_bonus
-                .min(Self::calc_acute_angle_bonus(last_angle).powf(3.0));
+            let acute_rep_raw =
+                acute_angle_bonus.min(Self::calc_acute_angle_bonus(last_angle).powf(3.0));
             let acute_penalty = (rep_strength * 0.5 + acute_rep_raw * 0.5) * (1.0 - high_bpm_t);
             let acute_rep_buff = high_bpm_t * 0.10;
-            acute_angle_bonus *= (0.5
-                + 0.5 * (1.0 - acute_penalty)
-                + acute_rep_buff)
-                .max(0.0);
+            acute_angle_bonus *= (0.5 + 0.5 * (1.0 - acute_penalty) + acute_rep_buff).max(0.0);
 
             wiggle_bonus = angle_bonus
                 * smootherstep(
@@ -389,11 +398,19 @@ impl AimEvaluator {
                 let angle_uniformity = (1.0 - (angle_stddev / 0.3).clamp(0.0, 1.0)).max(0.0);
 
                 // Distance uniformity: CV < 0.15 = very constant spacing
-                let dist_cv = if dist_mean > 0.0 { dist_stddev / dist_mean } else { 1.0 };
+                let dist_cv = if dist_mean > 0.0 {
+                    dist_stddev / dist_mean
+                } else {
+                    1.0
+                };
                 let dist_uniformity = (1.0 - (dist_cv / 0.15).clamp(0.0, 1.0)).max(0.0);
 
                 // Velocity uniformity: CV < 0.15 = constant speed
-                let vel_cv = if vel_mean > 0.0 { vel_stddev / vel_mean } else { 1.0 };
+                let vel_cv = if vel_mean > 0.0 {
+                    vel_stddev / vel_mean
+                } else {
+                    1.0
+                };
                 let vel_uniformity = (1.0 - (vel_cv / 0.15).clamp(0.0, 1.0)).max(0.0);
 
                 // All three must be uniform for the nerf to fire

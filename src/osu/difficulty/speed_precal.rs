@@ -30,8 +30,7 @@ fn compute_mult(
     // 2) Sustained chain override: if we're in the nerf zone AND a long
     //    consecutive 1/4 chain exists with low UR, upgrade the bpm_mult
     //    from nerf to slight buff (saves real stamina streamers).
-    let in_nerf_zone = dominant_tap_bpm > p.nerf_lo_bpm
-        && dominant_tap_bpm <= p.nerf_hi_bpm;
+    let in_nerf_zone = dominant_tap_bpm > p.nerf_lo_bpm && dominant_tap_bpm <= p.nerf_hi_bpm;
     if in_nerf_zone && find_sustained_chain(objects, p) {
         bpm_mult = p.sustained_bonus;
     }
@@ -122,11 +121,7 @@ fn find_sustained_chain(objects: &[SpeedObjectData], p: &SpeedReworkParams) -> b
 /// distinguish real rhythmic tapping from vibro spam.
 ///
 /// Returns a value in [floor, ceil].
-fn rhythm_quality(
-    objects: &[SpeedObjectData],
-    p: &SpeedReworkParams,
-    autopilot: bool,
-) -> f64 {
+fn rhythm_quality(objects: &[SpeedObjectData], p: &SpeedReworkParams, autopilot: bool) -> f64 {
     if objects.len() < 8 {
         return 1.0;
     }

@@ -1,9 +1,9 @@
 use crate::{
-    Beatmap, Difficulty, any::difficulty::skills::StrainSkill, model::mode::ConvertError,
-    osu::convert::prepare_map,
+    any::difficulty::skills::StrainSkill, model::mode::ConvertError, osu::convert::prepare_map,
+    Beatmap, Difficulty,
 };
 
-use super::difficulty::{DifficultyValues, skills::OsuSkills};
+use super::difficulty::{skills::OsuSkills, DifficultyValues};
 
 /// The result of calculating the strains on a osu! map.
 ///

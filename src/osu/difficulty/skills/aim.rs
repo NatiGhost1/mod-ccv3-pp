@@ -1,7 +1,7 @@
 use crate::{
     any::difficulty::{
         object::{HasStartTime, IDifficultyObject},
-        skills::{StrainSkill, strain_decay},
+        skills::{strain_decay, StrainSkill},
     },
     osu::difficulty::{
         evaluators::{AimEvaluator, AimRxEvaluator},

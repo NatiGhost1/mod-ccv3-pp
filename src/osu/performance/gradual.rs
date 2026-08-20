@@ -1,5 +1,5 @@
 use crate::{
-    Beatmap, Difficulty, any::CalculateError, model::mode::ConvertError, osu::OsuGradualDifficulty,
+    any::CalculateError, model::mode::ConvertError, osu::OsuGradualDifficulty, Beatmap, Difficulty,
 };
 
 use super::{OsuPerformanceAttributes, OsuScoreState};
@@ -141,7 +141,7 @@ impl OsuGradualPerformance {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Beatmap, osu::OsuPerformance};
+    use crate::{osu::OsuPerformance, Beatmap};
 
     use super::*;
 

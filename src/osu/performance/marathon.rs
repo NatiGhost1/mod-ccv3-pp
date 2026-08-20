@@ -96,9 +96,9 @@ pub fn vanilla_marathon_multiplier(
     acc: f64,
     params: VanillaMarathonParams,
 ) -> f64 {
-    if local_aim_sr.len() < params.min_sustained_minutes 
-        || local_aim_sr.len() != local_speed_sr.len() 
-        || map_max_combo < params.min_combo_for_marathon 
+    if local_aim_sr.len() < params.min_sustained_minutes
+        || local_aim_sr.len() != local_speed_sr.len()
+        || map_max_combo < params.min_combo_for_marathon
     {
         return 1.0;
     }
@@ -106,7 +106,8 @@ pub fn vanilla_marathon_multiplier(
     let mut sustained_good_minutes = 0usize;
 
     for (aim_sr, speed_sr) in local_aim_sr.iter().zip(local_speed_sr.iter()) {
-        if *aim_sr < params.min_sr_for_consideration || *speed_sr < params.min_sr_for_consideration {
+        if *aim_sr < params.min_sr_for_consideration || *speed_sr < params.min_sr_for_consideration
+        {
             continue;
         }
 

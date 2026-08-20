@@ -5,6 +5,7 @@ use crate::{
     osu::{difficulty::object::OsuDifficultyObject, object::OsuObjectKind},
 };
 
+#[derive(Clone)]
 pub struct FlashlightEvaluator {
     scaling_factor: f64,
     time_preempt: f64,

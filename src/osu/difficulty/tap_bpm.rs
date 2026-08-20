@@ -68,7 +68,11 @@ pub fn dominant_tap_bpm_from_owned(
         (deltas[m - 1] + deltas[m]) / 2.0
     };
 
-    if median > 0.0 { 15_000.0 / median } else { 0.0 }
+    if median > 0.0 {
+        15_000.0 / median
+    } else {
+        0.0
+    }
 }
 
 #[cfg(test)]
@@ -105,11 +109,19 @@ mod tests {
         let mut strains = Vec::new();
 
         for _ in 0..100 {
-            objects.push(SpeedObjectData { delta_time: dt_slow, pos_x: 0.0, pos_y: 0.0 });
+            objects.push(SpeedObjectData {
+                delta_time: dt_slow,
+                pos_x: 0.0,
+                pos_y: 0.0,
+            });
             strains.push(1.0);
         }
         for _ in 0..100 {
-            objects.push(SpeedObjectData { delta_time: dt_fast, pos_x: 0.0, pos_y: 0.0 });
+            objects.push(SpeedObjectData {
+                delta_time: dt_fast,
+                pos_x: 0.0,
+                pos_y: 0.0,
+            });
             strains.push(5.0);
         }
 

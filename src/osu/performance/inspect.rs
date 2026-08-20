@@ -1,9 +1,9 @@
 use std::cmp;
 
 use crate::{
-    Difficulty,
     any::{HitResultPriority, InspectablePerformance},
     osu::{Osu, OsuDifficultyAttributes, OsuScoreOrigin},
+    Difficulty,
 };
 
 /// Inspectable [`OsuPerformance`] to expose all of its internal details.

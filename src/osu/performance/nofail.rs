@@ -85,7 +85,11 @@ pub fn nf_multiplier(
             // Estimate how far they'd get: health_bar / drain_rate
             let drain_rate = (net_drain - net_recovery) / total_hits_f;
             // Starting at 1.0 health, time to reach 0:
-            let notes_until_fail = if drain_rate > 0.0 { 1.0 / drain_rate } else { total_hits_f };
+            let notes_until_fail = if drain_rate > 0.0 {
+                1.0 / drain_rate
+            } else {
+                total_hits_f
+            };
             let fail_fraction = (notes_until_fail / total_hits_f).clamp(0.0, 1.0);
 
             // Scale: estimated_fail_fraction^0.5 (gentle — sqrt curve

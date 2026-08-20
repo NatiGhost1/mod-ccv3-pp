@@ -2,8 +2,8 @@ use std::cmp;
 
 use crate::{
     any::{
-        HitResultGenerator, HitResultPriority,
         hitresult_generator::{Fast, IgnoreAccuracy},
+        HitResultGenerator, HitResultPriority,
     },
     osu::{InspectOsuPerformance, Osu, OsuHitResults},
 };
@@ -122,12 +122,12 @@ impl HitResultGenerator<Osu> for Fast {
 
 #[cfg(test)]
 mod tests {
-    use rosu_mods::{GameMod, generated_mods::ClassicOsu};
+    use rosu_mods::{generated_mods::ClassicOsu, GameMod};
 
     use crate::{
-        Difficulty,
         any::HitResultPriority,
         osu::{OsuDifficultyAttributes, OsuScoreOrigin},
+        Difficulty,
     };
 
     use super::*;

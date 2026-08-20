@@ -137,6 +137,8 @@ impl OsuPerformanceCalculator<'_> {
             )
         } else {
             effective_miss_count
+                + f64::from(self.state.hitresults.n50)
+                    * n50_effective_miss_multiplier(self.attrs.od())
         };
 
         let speed_deviation = self.calculate_speed_deviation();
@@ -1134,11 +1136,23 @@ impl OsuPerformanceCalculator<'_> {
         // Accuracy calibration: high acc on long maps → small relief
         let acc = self.acc;
         let acc_relief =
-            0.0 * ((acc - 0.95) / 0.05).clamp(0.0, 1.0) * (combo_f / 4000.0).clamp(0.0, 1.0); // Strictened combo factor to (combo_f / 4000.0) because (combo_f / 2000.0) is too lenient in a cheat environment where accuracy is the primary measurement for skill.
+            0.0 * ((acc - 0.95) / 0.05).clamp(0.0, 1.0) * (combo_f / 4000.0).clamp(0.0, 1.0); // Strictened combo factor before it was too lenient in a cheat environment where accuracy is the primary measurement of skill.
 
         result += acc_relief;
 
         result.min(1.0)
+    }
+}
+
+fn n50_effective_miss_multiplier(od: f64) -> f64 {
+    if od <= 1.0 {
+        1.0
+    } else if od <= 7.0 {
+        1.0 - (od - 1.0) / 6.0 * 0.5
+    } else if od <= 10.0 {
+        0.5 - (od - 7.0) / 3.0 * 0.25
+    } else {
+        (0.25 * (1.0 - (od - 10.0) / 3.33)).clamp(0.0, 0.25)
     }
 }
 

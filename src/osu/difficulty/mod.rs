@@ -6,10 +6,9 @@ use skills::{
 };
 
 use crate::{
-    Beatmap,
     any::{
+        difficulty::{skills::StrainSkill, Difficulty},
         CalculateError,
-        difficulty::{Difficulty, skills::StrainSkill},
     },
     model::{beatmap::BeatmapAttributes, mode::ConvertError, mods::GameMods},
     osu::{
@@ -23,6 +22,7 @@ use crate::{
         performance::PERFORMANCE_BASE_MULTIPLIER,
         utils::legacy_score::NestedScorePerObject,
     },
+    Beatmap,
 };
 
 use self::skills::OsuSkills;
@@ -37,8 +37,8 @@ pub mod scaling_factor;
 pub mod skills;
 
 // CC V3 modules
-pub mod tap_bpm;
 pub mod speed_precal;
+pub mod tap_bpm;
 
 const STAR_RATING_MULTIPLIER: f64 = 0.0265;
 
@@ -205,6 +205,7 @@ impl DifficultyValues {
         // Strain peaks for local_sr_per_minute (marathon decay)
         let aim_peaks: Vec<f64> = skills.aim.clone().into_current_strain_peaks();
         let speed_peaks: Vec<f64> = skills.speed.clone().into_current_strain_peaks();
+        let flashlight_peaks: Vec<f64> = skills.flashlight.clone().into_current_strain_peaks();
 
         // Compute dominant_tap_bpm
         if !object_strains.is_empty() && !speed_object_data.is_empty() {
@@ -213,8 +214,10 @@ impl DifficultyValues {
         }
 
         // Compute speed rework multipliers
-        let (vanilla_mult, autopilot_mult) =
-            speed_precal::precompute_speed_rework_from_owned(&speed_object_data, attrs.dominant_tap_bpm);
+        let (vanilla_mult, autopilot_mult) = speed_precal::precompute_speed_rework_from_owned(
+            &speed_object_data,
+            attrs.dominant_tap_bpm,
+        );
         attrs.speed_rework_mult_vanilla = vanilla_mult;
         attrs.speed_rework_mult_autopilot = autopilot_mult;
 
@@ -222,6 +225,8 @@ impl DifficultyValues {
         attrs.local_sr_per_minute = crate::osu::performance::relax_marathon::local_sr_per_minute(
             &aim_peaks,
             &speed_peaks,
+            &flashlight_peaks,
+            skills.memory.clone().difficulty(),
         );
 
         // Compute AP-only speed/rhythm local SR for autopilot marathon decay.
@@ -234,8 +239,15 @@ impl DifficultyValues {
             crate::osu::performance::auto_marathon::local_aim_per_minute(&aim_peaks);
 
         // Compute local_bpm_per_minute for autopilot marathon decay
-        let delta_times: Vec<f64> = diff_objects.iter().map(|obj| obj.adjusted_delta_time).collect();
-        attrs.local_bpm_per_minute = crate::osu::performance::auto_marathon::compute_local_bpm_per_minute(&diff_objects, &delta_times);
+        let delta_times: Vec<f64> = diff_objects
+            .iter()
+            .map(|obj| obj.adjusted_delta_time)
+            .collect();
+        attrs.local_bpm_per_minute =
+            crate::osu::performance::auto_marathon::compute_local_bpm_per_minute(
+                &diff_objects,
+                &delta_times,
+            );
 
         // Compute avg_jump_dist and median_delta_time
         let mut dist_sum = 0.0;

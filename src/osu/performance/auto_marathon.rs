@@ -6,8 +6,8 @@ pub struct AutopilotDecayParams {
     #[allow(dead_code)]
     pub tau: f64, // legacy SR tolerance; kept for compatibility but not used by the current AP decay logic.
     pub bpm_tau: f64, // BPM tolerance for grouping nearby minutes into a single streak.
-    pub b: f64,   // base decay scaling factor.
-    pub q: f64,   // exponent for streak length decay.
+    pub b: f64,       // base decay scaling factor.
+    pub q: f64,       // exponent for streak length decay.
     #[allow(dead_code)]
     pub double_at: u32, // streak length in minutes after which decay is slightly larger.
 }
@@ -30,7 +30,7 @@ pub fn decay_divisor(r: u32, average_bpm: f64, p: AutopilotDecayParams) -> f64 {
 
     // For high BPM (>365), nerf decreases exponentially with streak length
     let streak_factor = if average_bpm > 365.0 {
-        (-(r as f64) * 0.08).exp()  // More aggressive exponential decay
+        (-(r as f64) * 0.08).exp() // More aggressive exponential decay
     } else {
         1.0
     };
@@ -54,8 +54,10 @@ fn lerp(a: f64, b: f64, t: f64) -> f64 {
 // Replicates OsuStrainSkill::difficulty_value logic but on a slice of peaks.
 fn difficulty_value_from_peaks(peaks: &[f64]) -> f64 {
     let mut v: Vec<f64> = peaks.iter().copied().filter(|x| *x > 0.0).collect();
-    if v.is_empty() { return 0.0; }
-    
+    if v.is_empty() {
+        return 0.0;
+    }
+
     v.sort_by(|a, b| b.partial_cmp(a).unwrap());
 
     // same intent as reduced top peaks (see OsuStrainSkill constants)
@@ -131,7 +133,10 @@ pub fn compute_local_bpm_per_minute(
     diff_objects: &[crate::osu::difficulty::object::OsuDifficultyObject],
     delta_times: &[f64],
 ) -> Vec<f64> {
-    let total_time = diff_objects.last().map(|obj| obj.base.start_time as f64).unwrap_or(0.0);
+    let total_time = diff_objects
+        .last()
+        .map(|obj| obj.base.start_time as f64)
+        .unwrap_or(0.0);
     let n_minutes = ((total_time / MINUTE_MS).ceil() as usize).max(1);
 
     let mut out = Vec::with_capacity(n_minutes);
@@ -201,7 +206,8 @@ pub fn autopilot_marathon_multiplier(
     local_aim: &[f64],
     params: AutopilotDecayParams,
 ) -> f64 {
-    if local_sr.len() < 2 || local_sr.len() != local_bpm.len() || local_sr.len() != local_aim.len() {
+    if local_sr.len() < 2 || local_sr.len() != local_bpm.len() || local_sr.len() != local_aim.len()
+    {
         return 1.0;
     }
 
@@ -230,11 +236,11 @@ pub fn autopilot_marathon_multiplier(
         let average_bpm = sum_bpm / count as f64;
         let mut lambda = 1.0 / decay_divisor(r, average_bpm, params);
 
-        // If a section is low BPM but shows high aim intensity, since AP is only tapping, 
-        // we can be more confident it's a relax-style section and less autopilot-like, 
-        // so apply an extra decay factor. The extra decay scales up with the aim ratio and with 
-        // consecutive low-BPM aim-heavy minutes, capped at 25% total extra decay. 
-        // This helps preserve more pp on maps with some relax-style sections, 
+        // If a section is low BPM but shows high aim intensity, since AP is only tapping,
+        // we can be more confident it's a relax-style section and less autopilot-like,
+        // so apply an extra decay factor. The extra decay scales up with the aim ratio and with
+        // consecutive low-BPM aim-heavy minutes, capped at 25% total extra decay.
+        // This helps preserve more pp on maps with some relax-style sections,
         // while still applying a strong marathon nerf to maps that are consistently low BPM and aim-heavy.
         let aim = local_aim[k];
         let aim_ratio = if sr > 0.0 { aim / sr } else { 0.0 };

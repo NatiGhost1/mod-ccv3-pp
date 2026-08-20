@@ -1,11 +1,11 @@
 use rosu_map::section::general::GameMode;
 
 use crate::{
-    Beatmap,
     any::hit_result::HitResult,
     model::beatmap::BeatmapAttributes,
     osu::object::{NestedSliderObjectKind, OsuObject, OsuObjectKind},
     util::ruleset_ext::calculate_difficulty_peppy_stars,
+    Beatmap,
 };
 
 pub mod gradual;

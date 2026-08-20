@@ -3,7 +3,6 @@ use std::{cmp, iter::Peekable, vec};
 use rosu_map::section::events::BreakPeriod;
 
 use crate::{
-    Beatmap,
     any::hit_result::HitResult,
     model::beatmap::BeatmapAttributes,
     osu::{
@@ -14,6 +13,7 @@ use crate::{
         object::{NestedSliderObjectKind, OsuObject, OsuObjectKind},
     },
     util::ruleset_ext::calculate_difficulty_peppy_stars,
+    Beatmap,
 };
 
 pub struct GradualLegacyScoreSimulator {

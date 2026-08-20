@@ -1,8 +1,8 @@
 use std::cmp;
 
 use crate::{
-    GameMods,
     osu::{OsuDifficultyAttributes, OsuScoreState},
+    GameMods,
 };
 
 pub struct OsuLegacyScoreMissCalculator<'a> {
